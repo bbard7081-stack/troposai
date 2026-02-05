@@ -1,0 +1,6 @@
+body { font-family: Inter, system-ui, Arial, sans-serif; padding: 1rem; }
+.container { max-width: 900px; margin: 0 auto; }
+.screen-pop { position: fixed; right: 20px; top: 20px; z-index: 1000; }
+.card { background: #fff; border: 1px solid #ddd; padding: 1rem; width: 320px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.close { background: transparent; border: none; float: right; font-size: 1.2rem; }
+.payload { max-height: 200px; overflow: auto; background: #f7f7f7; padding: 0.5rem; }
