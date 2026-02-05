@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tropos | Care Management</title>
+  <meta name="format-detection" content="telephone=no">
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Suppress production Tailwind warning
+    window.tailwind = window.tailwind || { config: {} };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+  <!-- RingCentral Embeddable (Disabled as per user request to use native app)
+  <script>
+    (function () {
+      const clientId = 'ceEKax1k8x7aWXcxgumFvb';
+      const origin = window.location.origin;
+      const pathname = window.location.pathname;
+      const isProduction = origin.includes('troposai.com');
+
+      // Detected Subpath
+      let subpath = '';
+      if (pathname.includes('/shimchatalent'))        window.location.href = '/simchatalent';
+      else if (pathname.includes('/testing')) subpath = '/testing';
+
+      // Use our own redirect.html for production, built-in for localhost
+      let redirectUriRaw;
+      if (isProduction) {
+        redirectUriRaw = origin + subpath + '/redirect.html';
+      } else {
+        redirectUriRaw = 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
+      }
+      const redirectUri = encodeURIComponent(redirectUriRaw);
+
+      console.log('--- RINGCENTRAL INITIALIZATION ---');
+      console.log('Version: 1.0.6-AUTO-DETECT');
+      console.log('Environment:', isProduction ? 'PRODUCTION' : 'LOCALHOST');
+      console.log('Origin:', origin);
+      console.log('Subpath:', subpath || '(none)');
+      console.log('Redirect URI:', redirectUriRaw);
+      console.log('--------------------------------------');
+
+      const script = document.createElement('script');
+      script.src = `https://ringcentral.github.io/ringcentral-embeddable/adapter.js?clientId=${clientId}&appServer=https://platform.ringcentral.com&redirectUri=${redirectUri}`;
+      document.head.appendChild(script);
+    })();
+  </script>
+  -->
+</head>
+
+<body class="bg-gray-50 text-gray-900">
+  <script>
+    window.onerror = function (message, source, lineno, colno, error) {
+      document.body.innerHTML = '<div style="padding: 20px; font-family: monospace; color: red; background: white; white-space: pre-wrap;">' +
+        '<h1>Startup Error</h1>' +
+        '<strong>Message:</strong> ' + message + '\n' +
+        '<strong>Source:</strong> ' + source + ':' + lineno + ':' + colno + '\n' +
+        '<strong>Stack:</strong> ' + (error ? error.stack : 'N/A') +
+        '</div>';
+      console.error("Critical Startup Error:", message, error);
+      return true;
+    };
+
+    window.addEventListener('unhandledrejection', function (event) {
+      document.body.innerHTML += '<div style="padding: 20px; border-top: 1px solid #ccc; font-family: monospace; color: darkred; background: white; white-space: pre-wrap;">' +
+        '<h1>Unhandled Promise Rejection</h1>' +
+        '<strong>Reason:</strong> ' + event.reason +
+        '</div>';
+    });
+  </script>
+  <div id="root">
+    <div
+      style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; background-color: #f8fafc; color: #334155;">
+      <div
+        style="width: 40px; height: 40px; border: 4px solid #cbd5e1; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;">
+      </div>
+      <h1 style="margin-top: 20px; font-size: 24px;">Tropos</h1>
+      <p style="color: #64748b;">Loading application resources.</p>
+      <p style="margin-top: 20px; font-size: 12px; color: #94a3b8;">If this screen persists, JavaScript failed to load.
+      </p>
+      <style>
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      </style>
+    </div>
+  </div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>

@@ -1,0 +1,45 @@
+services:
+  crm_app:
+    build: .
+    container_name: tropos_crm
+    restart: always
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./backups:/app/backups
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_PATH=/app/data/crm_data.db
+      - RESEND_API_KEY=re_9RSMbtL3_GZ9usjT3NvvjsAAfji2M2zSd
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+        reservations:
+          memory: 200M
+
+  crm_staging:
+    build: .
+    container_name: tropos_staging
+    restart: always
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - NODE_OPTIONS="--max-old-space-size=512"
+      - DATABASE_PATH=/app/data/test_data.db
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+        reservations:
+          memory: 200M

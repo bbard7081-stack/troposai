@@ -1,31 +1,20 @@
-# RingCentral Incoming Call Handler
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-This repo contains a basic scaffold for a RingCentral Incoming Call Handler application.
+# Run and deploy your AI Studio app
 
-- Backend: Node.js + Express (receives RingCentral webhooks at `/webhook`)
-- Frontend: Vite + React (TypeScript) client in `/client` for Screen Pop UI
+This contains everything you need to run your app locally.
 
-Quick start
+View your app in AI Studio: https://ai.studio/apps/drive/14CN7UTHEK__Ym5Dbn5AHX8uBcY6_ws_-
 
-1. Install dependencies (root and client):
+## Run Locally
 
-```bash
-cd rc-incoming-handler
-npm install
-cd client
-npm install
-```
+**Prerequisites:**  Node.js
 
-2. Start both server and client (from repo root):
 
-```bash
-npm run dev
-```
-
-3. Configure RingCentral webhook to point to `https://<your-host>/webhook` and use the received events.
-
-Next steps
-
-- Add caller ID lookup (simple in-memory or DB) in the backend.
-- Persist recent calls and build the Active Call dashboard in the client.
-- Secure webhook validation using RingCentral's verification token.
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

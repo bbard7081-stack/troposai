@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>RingCentral Redirect</title>
+    <script>
+        console.log('--- RINGCENTRAL REDIRECT HANDLER ---');
+        console.log('Current URL:', window.location.href);
+
+        const data = {
+            type: 'rc-adapter-redirect-event',
+            url: window.location.href,
+        };
+
+        let sent = false;
+
+        // 1. Try window.opener (for Popups)
+        if (window.opener) {
+            console.log('📡 RC Redirect: Sending to window.opener...');
+            window.opener.postMessage(data, '*');
+            sent = true;
+        }
+
+        // 2. Try window.parent (for Iframes/Same window)
+        if (window.parent && window.parent !== window) {
+            console.log('📡 RC Redirect: Sending to window.parent...');
+            window.parent.postMessage(data, '*');
+            sent = true;
+        }
+
+        if (!sent) {
+            console.error('❌ RC Redirect: Could not find parent/opener window to signal!');
+        }
+
+        // Auto-close after a short delay
+        setTimeout(() => {
+            console.log('🏁 RC Redirect: Closing window...');
+            if (window.opener) window.close();
+        }, 1000);
+    </script>
+</head>
+
+<body>
+    <div style="text-align: center; font-family: sans-serif; margin-top: 50px; padding: 20px;">
+        <h2 style="color: #2563eb;">Authenticating with RingCentral...</h2>
+        <p style="color: #64748b;">This window should close automatically in a moment.</p>
+        <div style="margin-top: 20px; font-size: 12px; color: #94a3b8;">
+            If this window stays open, please click the button below:
+            <br><br>
+            <button onclick="window.close()"
+                style="padding: 10px 20px; background: #0f172a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Close
+                Window</button>
+        </div>
+    </div>
+</body>
+
+</html>

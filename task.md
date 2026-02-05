@@ -1,0 +1,25 @@
+# Task: Implement RingCentral Simulator in Admin Panel
+
+- [x] Research existing RingCentral integration <!-- id: 0 -->
+    - [x] Review `App.tsx` event listeners <!-- id: 1 -->
+    - [x] Review `server.js` webhook and RC endpoints <!-- id: 2 -->
+    - [x] Review `components/AdminPanel.tsx` structure <!-- id: 3 -->
+- [x] Implement Backend Simulation Endpoints <!-- id: 5 -->
+    - [x] Add `/api/debug/simulate-call` <!-- id: 6 -->
+    - [x] Add `/api/debug/simulate-sms` <!-- id: 7 -->
+- [x] Implement Simulator UI in Admin Panel <!-- id: 8 -->
+    - [x] Create `RingCentralSimulator` component <!-- id: 9 -->
+    - [x] Integrate into `AdminPanel.tsx` <!-- id: 10 -->
+- [x] Refine RingCentral Integration <!-- id: 15 -->
+    - [x] Confirm incoming call features (Screen Pop, Contact Sync) <!-- id: 16 -->
+    - [x] Remove embedded phone dialer <!-- id: 17 -->
+    - [x] Implement outgoing calls via native RC app (`rc://`) <!-- id: 18 -->
+    - [x] Implement backend polling for active calls (`/api/telephony/active-call`) <!-- id: 18b -->
+- [x] Verification and Testing <!-- id: 11 -->
+    - [x] Verify simulated call pop-up without dialer <!-- id: 12 -->
+    - [x] Verify SMS simulation <!-- id: 13 -->
+    - [x] Verify native app protocol link <!-- id: 14 -->
+- [x] RingCentral Auth & Optimization <!-- id: 20 -->
+    - [x] Implement `RingCentralManager` class (Backend) <!-- id: 21 -->
+    - [x] Implement Server-Sent Events (SSE) (Backend) <!-- id: 22 -->
+    - [x] Replace Polling with SSE (Frontend) <!-- id: 23 -->
