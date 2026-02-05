@@ -7,23 +7,19 @@ export const RingCentralService = {
      */
     handleIncomingCall: async (phoneNumber: string, assignedTo: string = ''): Promise<string> => {
         try {
-            console.log('📞 Handling incoming call from:', phoneNumber);
 
             // 1. Search for existing contact
             const contacts = await api.fetchContacts(phoneNumber);
             const existingContact = contacts.find((c: any) => c.phone.includes(phoneNumber) || phoneNumber.includes(c.phone));
 
             if (existingContact) {
-                console.log('✅ Found existing contact:', existingContact.name);
                 if (assignedTo && existingContact.assignedTo !== assignedTo) {
                     await api.updateContact(existingContact.id, { ...existingContact, assignedTo });
-                    console.log(`👤 Re-assigned contact to ${assignedTo}`);
                 }
                 return existingContact.id;
             }
 
             // 2. Create new contact if not found
-            console.log('🆕 Creating new contact for:', phoneNumber);
             const newContact = {
                 name: `New Caller ${phoneNumber}`,
                 phone: phoneNumber,
@@ -47,7 +43,6 @@ export const RingCentralService = {
      */
     handleCallEnded: async (phoneNumber: string, status: string): Promise<void> => {
         try {
-            console.log('📞 Handling call end:', phoneNumber, status);
             const contacts = await api.fetchContacts(phoneNumber);
             const contact = contacts.find((c: any) => c.phone.includes(phoneNumber) || phoneNumber.includes(c.phone));
 
@@ -65,7 +60,6 @@ export const RingCentralService = {
                 };
 
                 await api.updateContact(contact.id, updated);
-                console.log(`✅ Marked contact ${contact.name} as ${status}`);
             }
         } catch (error) {
             console.error('Error handling call end:', error);

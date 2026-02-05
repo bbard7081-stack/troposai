@@ -280,7 +280,6 @@ const GridView: React.FC<GridViewProps> = ({
     // Call Log Stub Helper
     const logUnitStub = (newValue: any) => {
       if (['qualifiedFor', 'approved', 'assignedTo'].includes(col.id)) {
-        console.log("UNIT_STUB", "update_" + col.id, "current_user", row.id, newValue);
       }
     };
 

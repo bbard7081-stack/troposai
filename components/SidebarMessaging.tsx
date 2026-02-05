@@ -28,7 +28,6 @@ const SidebarMessaging: React.FC<SidebarMessagingProps> = ({ currentUser, allUse
 
   // Mock function to simulate email trigger
   const triggerEmailNotification = (user: AppUser, content: string) => {
-    console.log(`[SIMULATION] Sending email to ${user.email}: "${content}"`);
     const toastId = Math.random().toString(36).substr(2, 9);
     setEmailToasts(prev => [...prev, { id: toastId, name: user.name }]);
     setTimeout(() => {

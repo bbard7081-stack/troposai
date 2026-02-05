@@ -19,28 +19,17 @@ const platform = rcsdk.platform();
 
 async function listSubscriptions() {
     try {
-        console.log('🔐 Authenticating with RingCentral Production...');
         await platform.login({
             jwt: process.env.VITE_RC_JWT
         });
 
-        console.log('📡 Fetching active subscriptions...');
         const response = await platform.get('/restapi/v1.0/subscription');
         const data = await response.json();
 
         if (data.records && data.records.length > 0) {
-            console.log(`✅ Found ${data.records.length} active subscription(s):`);
             data.records.forEach((sub, i) => {
-                console.log(`\n--- Subscription #${i + 1} ---`);
-                console.log('ID:', sub.id);
-                console.log('Status:', sub.status);
-                console.log('URL:', sub.deliveryMode.address);
-                console.log('Created:', sub.creationTime);
-                console.log('Expires:', sub.expirationTime);
-                console.log('Events:', sub.eventFilters.join(', '));
             });
         } else {
-            console.log('⚠️ No active subscriptions found.');
         }
 
     } catch (e) {

@@ -13,8 +13,6 @@ dotenv.config();
 const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'crm_data.db');
 
 async function sync() {
-    console.log('🚀 STAFF SYNC DIAGNOSTIC');
-    console.log('📊 DB Path:', dbPath);
 
     const SQL = await initSqlJs();
     if (!fs.existsSync(dbPath)) {
@@ -26,7 +24,6 @@ async function sync() {
     const db = new SQL.Database(buffer);
 
     // 1. Force fix the table schema first
-    console.log('🛠️  Fixing table schema...');
     try {
         db.run("DROP TABLE IF EXISTS users_new");
         db.run(`CREATE TABLE users_new (
@@ -47,12 +44,10 @@ async function sync() {
         try {
             db.run("INSERT INTO users_new (id, name, email, role, status, ringCentralEmail, extensionNumber) SELECT id, name, email, role, status, ringCentralEmail, extensionNumber FROM users");
         } catch (e) {
-            console.log('⚠️  Could not migrate existing users (likely due to constraints)');
         }
 
         db.run("DROP TABLE users");
         db.run("ALTER TABLE users_new RENAME TO users");
-        console.log('✅ Users table recreated successfully');
     } catch (e) {
         console.error('❌ Failed to fix table:', e.message);
     }
@@ -66,13 +61,11 @@ async function sync() {
     const platform = rcsdk.platform();
 
     try {
-        console.log('🔑 Logging in to RingCentral via Fetch (Hardened)...');
         const rcClientId = (process.env.VITE_RC_CLIENT_ID || '').trim();
         const rcClientSecret = (process.env.VITE_RC_CLIENT_SECRET || '').trim();
         const rcJwt = (process.env.VITE_RC_JWT || '').trim();
         const rcServer = (process.env.VITE_RC_SERVER_URL || 'https://platform.ringcentral.com').trim();
 
-        console.log(`   Client ID: ${rcClientId.substring(0, 5)}...`);
 
         const authHeader = Buffer.from(`${rcClientId}:${rcClientSecret}`).toString('base64');
         const tokenResp = await fetch(`${rcServer}/restapi/oauth/token`, {
@@ -94,7 +87,6 @@ async function sync() {
 
         const tokenData = await tokenResp.json();
         platform.auth().setData(tokenData);
-        console.log('✅ Login successful (Fetch Hardened)');
 
         const resp = await platform.get('/restapi/v1.0/account/~/extension', {
             perPage: 100,
@@ -112,7 +104,6 @@ async function sync() {
             role: 'USER'
         }));
 
-        console.log(`👥 Found ${users.length} extensions`);
 
         const now = new Date().toISOString();
         users.forEach(user => {
@@ -129,7 +120,6 @@ async function sync() {
                     const crmUserId = existing[0].values[0][0];
                     const crmUserName = existing[0].values[0][1];
 
-                    console.log(`🔗 Matching RC User "${user.name}" to CRM User "${crmUserName}" (ID: ${crmUserId})`);
 
                     // Update existing CRM user with RC info
                     db.run(`UPDATE users SET 
@@ -140,15 +130,12 @@ async function sync() {
                             WHERE id = ?`,
                         [user.extensionNumber, user.rcEmail, user.status, now, crmUserId]
                     );
-                    console.log(`   + Updated: ${user.name}`);
                 } else {
                     // 3. If still not found, create as new staff member
-                    console.log(`🆕 Creating new CRM user for RC profile: ${user.name}`);
                     db.run(`INSERT INTO users (id, name, email, ringCentralEmail, role, team, status, extensionNumber, lastSynced) 
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                         [user.id, user.name, user.rcEmail, user.rcEmail, user.role, 'Staff', user.status, user.extensionNumber, now]
                     );
-                    console.log(`   + Created: ${user.name}`);
                 }
             } catch (e) {
                 console.error(`Error syncing user ${user.name}:`, e.message);
@@ -158,7 +145,6 @@ async function sync() {
         // Save
         const exported = db.export();
         fs.writeFileSync(dbPath, Buffer.from(exported));
-        console.log('💾 Database saved successfully');
 
     } catch (e) {
         console.error('❌ RC Sync failed:', e.message);

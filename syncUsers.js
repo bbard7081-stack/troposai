@@ -18,12 +18,10 @@ const platform = rcsdk.platform();
 
 async function syncUsers() {
     try {
-        console.log('🔐 Authenticating with RingCentral...');
         await platform.login({
             jwt: process.env.VITE_RC_JWT
         });
 
-        console.log('📡 Fetching extensions...');
         const response = await platform.get('/restapi/v1.0/account/~/extension', {
             perPage: 100,
             status: 'Enabled',
@@ -31,15 +29,10 @@ async function syncUsers() {
         });
 
         const data = await response.json();
-        console.log(`✅ Found ${data.records.length} users.`);
 
-        console.log('\n--- Staff List ---');
         data.records.forEach(ext => {
-            console.log(`[${ext.extensionNumber}] ${ext.name} - ${ext.contact?.email || 'No Email'}`);
         });
 
-        console.log('\n💡 These users will be auto-synced by the server on next startup.');
-        console.log('   You can also trigger a sync by visiting: https://troposai.com/api/ringcentral/users');
 
     } catch (e) {
         console.error('❌ Sync Failed:', e.message);

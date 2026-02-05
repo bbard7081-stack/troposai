@@ -5,5 +5,4 @@ initSqlJs().then(SQL => {
     const db = new SQL.Database(data);
     db.run("INSERT OR IGNORE INTO users (id, name, email, role, status) VALUES (?, ?, ?, ?, ?)", ['u_manual_baila', 'Baila Bard', 'bbard7081@gmail.com', 'ADMIN', 'ACTIVE']);
     fs.writeFileSync('/app/data/crm_data.db', Buffer.from(db.export()));
-    console.log('✅ Success: Baila Bard added to production.');
 }).catch(e => console.error(e));

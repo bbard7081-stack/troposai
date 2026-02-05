@@ -54,7 +54,6 @@ async function importUsers() {
     let addedCount = 0;
     let skippedCount = 0;
 
-    console.log(`Processing ${lines.length} users...`);
 
     db.run("BEGIN TRANSACTION");
 
@@ -72,7 +71,6 @@ async function importUsers() {
         }
 
         if (!name || !email) {
-            console.log(`Skipping invalid line: ${line}`);
             continue;
         }
 
@@ -81,14 +79,12 @@ async function importUsers() {
 
         // Apply overrides
         if (EMAIL_OVERRIDES[email]) {
-            console.log(`🔄 Overriding email for ${name}: ${email} -> ${EMAIL_OVERRIDES[email]}`);
             email = EMAIL_OVERRIDES[email];
         }
 
         // Check if exists
         const result = checkStmt.get([email]);
         if (result.count > 0) {
-            console.log(`⏭️  Skipping existing user: ${email}`);
             skippedCount++;
             continue;
         }
@@ -96,7 +92,6 @@ async function importUsers() {
         try {
             const id = `u_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
             stmt.run([id, name, email, 'USER', 'ACTIVE']);
-            console.log(`✅ Added user: ${name} (${email})`);
             addedCount++;
         } catch (e) {
             console.error(`❌ Failed to add ${name} (${email}): ${e.message}`);
@@ -109,9 +104,6 @@ async function importUsers() {
     const binaryArray = db.export();
     fs.writeFileSync(dbPath, Buffer.from(binaryArray));
 
-    console.log(`\nImport Complete!`);
-    console.log(`Added: ${addedCount}`);
-    console.log(`Skipped: ${skippedCount}`);
 }
 
 importUsers().catch(console.error);

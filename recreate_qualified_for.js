@@ -7,7 +7,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function recreateQualifiedForColumn() {
-    console.log('Recreating Qualified For column with multi-select...');
     const SQL = await initSqlJs();
     const dbPath = path.join(__dirname, 'crm_data.db');
 
@@ -15,7 +14,6 @@ async function recreateQualifiedForColumn() {
     if (fs.existsSync(dbPath)) {
         const data = fs.readFileSync(dbPath);
         db = new SQL.Database(data);
-        console.log('✅ Loaded existing database');
     } else {
         console.error('❌ Database not found!');
         return;
@@ -23,21 +21,17 @@ async function recreateQualifiedForColumn() {
 
     try {
         // Step 1: Drop the old qualifiedFor column if it exists
-        console.log('Step 1: Checking for existing qualifiedFor column...');
         const tableInfo = db.exec('PRAGMA table_info(contacts)');
         const columns = tableInfo[0]?.values || [];
         const hasQualifiedFor = columns.some(col => col[1] === 'qualifiedFor');
 
         if (hasQualifiedFor) {
-            console.log('Found qualifiedFor column, backing up data...');
 
             // Backup existing data
             const existingData = db.exec('SELECT id, qualifiedFor FROM contacts WHERE qualifiedFor IS NOT NULL');
             const backupData = existingData[0]?.values || [];
-            console.log(`Backed up ${backupData.length} rows with qualifiedFor data`);
 
             // Create new table without qualifiedFor
-            console.log('Creating new table structure...');
             db.run(`
                 CREATE TABLE contacts_new AS 
                 SELECT id, name, dob, phone, level, approved, assignedTo, city, 
@@ -52,21 +46,15 @@ async function recreateQualifiedForColumn() {
             // Rename new table
             db.run('ALTER TABLE contacts_new RENAME TO contacts');
 
-            console.log('✅ Removed old qualifiedFor column');
         }
 
         // Step 2: Add new qualifiedFor column as TEXT (will store JSON array)
-        console.log('Step 2: Adding new qualifiedFor column...');
         db.run('ALTER TABLE contacts ADD COLUMN qualifiedFor TEXT');
-        console.log('✅ Added new qualifiedFor column');
 
         // Step 3: Update all existing rows to have empty array
-        console.log('Step 3: Initializing column with empty arrays...');
         db.run('UPDATE contacts SET qualifiedFor = "[]"');
-        console.log('✅ Initialized all rows');
 
         // Step 4: Update column configuration in admin_settings
-        console.log('Step 4: Updating column configuration...');
         const settingsCheck = db.exec('SELECT * FROM admin_settings WHERE key = "gridColumns"');
 
         let columns_config;
@@ -110,13 +98,9 @@ async function recreateQualifiedForColumn() {
             ['gridColumns', JSON.stringify(columns_config)]
         );
 
-        console.log('✅ Updated column configuration');
 
         // Save database
         fs.writeFileSync(dbPath, Buffer.from(db.export()));
-        console.log('✅ Database saved successfully');
-        console.log('\n🎉 Qualified For column recreated with MULTI_SELECT support!');
-        console.log('Please refresh your browser to see the changes.');
 
     } catch (e) {
         console.error('❌ Error:', e.message);

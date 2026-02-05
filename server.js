@@ -41,11 +41,9 @@ class RingCentralManager {
     async initialize() {
         if (this.initialized && await this.platform.loggedIn()) return;
 
-        console.log('🔑 [RC Manager] Authenticating...');
         try {
             await this.login();
             this.initialized = true;
-            console.log('✅ [RC Manager] Authenticated successfully');
         } catch (error) {
             console.error('❌ [RC Manager] Auth failed:', error.message);
             throw error; // Let startup fail if critical
@@ -70,7 +68,6 @@ class RingCentralManager {
 
     async ensureLoggedIn() {
         if (!await this.platform.loggedIn()) {
-            console.log('🔄 [RC Manager] Session expired, re-authenticating...');
             await this.login();
         }
     }
@@ -114,7 +111,6 @@ app.use(express.json());
 // Logging middleware
 app.use((req, res, next) => {
     const mem = process.memoryUsage();
-    console.log(`${req.method} ${req.path} | mem: ${Math.round(mem.rss / 1024 / 1024)}MB`);
     next();
 });
 
@@ -186,7 +182,6 @@ const requireSuperAdmin = (req, res, next) => {
 // ==================== RINGCENTRAL API (OUTBOUND) ====================
 
 app.post('/api/ringout', async (req, res) => {
-    console.log('📬 NEW RINGOUT REQUEST:', JSON.stringify(req.body));
     const { to, from, deviceType } = req.body;
 
     if (!to || !from) {
@@ -198,7 +193,6 @@ app.post('/api/ringout', async (req, res) => {
     const cleanNumber = (num) => {
         if (!num) return '';
         const digits = num.replace(/\D/g, '');
-        console.log(`🧹 Cleaning number: ${num} -> ${digits}`);
         if (digits.length === 10) return `+1${digits}`;
         if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
         // If < 10 digits, it's likely a typo, but we'll try to add +1 to be safe if it's 9 digits
@@ -209,16 +203,13 @@ app.post('/api/ringout', async (req, res) => {
     const formattedTo = cleanNumber(to);
     const formattedFrom = (deviceType === 'app' && from.length < 5) ? from : cleanNumber(from);
 
-    console.log(`📱 Numbers Formatted: To=${formattedTo}, From=${formattedFrom}`);
 
     try {
-        console.log('🔑 Authenticating with RingCentral via Fetch (Hardened)...');
         const rcClientId = (process.env.VITE_RC_CLIENT_ID || '').trim();
         const rcClientSecret = (process.env.VITE_RC_CLIENT_SECRET || '').trim();
         const rcJwt = (process.env.VITE_RC_JWT || '').trim();
         const rcServer = (process.env.VITE_RC_SERVER_URL || 'https://platform.ringcentral.com').trim();
 
-        console.log(`   Client ID: ${rcClientId.substring(0, 5)}...`);
 
         const authHeader = Buffer.from(`${rcClientId}:${rcClientSecret}`).toString('base64');
         const tokenResp = await fetch(`${rcServer}/restapi/oauth/token`, {
@@ -240,12 +231,7 @@ app.post('/api/ringout', async (req, res) => {
 
         const tokenData = await tokenResp.json();
         platform.auth().setData(tokenData);
-        console.log('✅ RC Sign-in Successful (Fetch Hardened)');
 
-        console.log(`📞 PLACING RC RINGOUT CALL...`);
-        console.log(`   FROM (Personal): ${formattedFrom}`);
-        console.log(`   TO (Customer):   ${formattedTo}`);
-        console.log(`   CALLER_ID:       ${COMPANY_NUMBER}`);
 
         const resp = await platform.post('/restapi/v1.0/account/~/extension/~/ring-out', {
             from: { phoneNumber: formattedFrom },
@@ -255,10 +241,8 @@ app.post('/api/ringout', async (req, res) => {
         });
 
         const jsonObj = await resp.json();
-        console.log('📦 RC API RESPONSE:', JSON.stringify(jsonObj, null, 2));
 
         if (resp.ok) {
-            console.log('✨ RingOut Success:', jsonObj.id, 'Status:', jsonObj.status.callStatus);
             res.json({ status: jsonObj.status.callStatus, id: jsonObj.id });
         } else {
             console.error('❌ RC API Error Status:', resp.status);
@@ -282,7 +266,6 @@ app.post('/api/ringout', async (req, res) => {
 
 // Test endpoint to verify webhook connectivity externally
 app.get('/api/webhook-test', (req, res) => {
-    console.log('🧪 WEBHOOK TEST ENDPOINT HIT');
     res.json({ status: 'Webhook endpoint is reachable', time: new Date().toISOString() });
 });
 
@@ -291,7 +274,6 @@ app.get('/api/webhook-test', (req, res) => {
 // Fetch all RingCentral users/extensions and save to database
 app.get('/api/ringcentral/users', async (req, res) => {
     try {
-        console.log('👥 Fetching RingCentral users...');
 
         // Ensure we're logged in
         const isLoggedIn = await platform.loggedIn();
@@ -323,7 +305,6 @@ app.get('/api/ringcentral/users', async (req, res) => {
 
         // 🧹 CLEANUP: Remove placeholder users once real ones are found
         if (users.length > 0) {
-            console.log('🧹 Cleaning up placeholder data...');
             // First, remove the strict check if it exists (by recreating the table if needed)
             // But we already updated database.js, so initializeDatabase should have handled it.
             db.run("DELETE FROM users WHERE email LIKE '%@sheetsync.com'");
@@ -352,7 +333,6 @@ app.get('/api/ringcentral/users', async (req, res) => {
 
         saveDatabase();
 
-        console.log(`✅ Synced ${users.length} RingCentral users for tenant ${req.tenantName}`);
         res.json({ users, staffExtensions: STAFF_EXTENSIONS });
     } catch (error) {
         console.error('❌ Failed to fetch RingCentral users:', error.message);
@@ -370,7 +350,6 @@ async function processTelephonyEvent(body, tenantId = 'simchatalent') {
 
     if (body.body?.origin?.type === 'RingOut') return;
 
-    console.log(`📡 [Telephony] Session ${sessionId} Status: ${eventType}`);
 
     const filteredParties = parties.filter(p => p.from?.phoneNumber !== COMPANY_NUMBER);
     const targetExtension = parties.find(p => p.extensionId)?.extensionId;
@@ -404,11 +383,9 @@ async function processTelephonyEvent(body, tenantId = 'simchatalent') {
                 'INSERT INTO contacts (id, tenant_id, name, phone, qualified_for, approved, assigned_to, level, city, crm_status, date_outreached, interaction_logs, last_call_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [contactId, tenantId, (caller.from.name && !caller.from.name.toLowerCase().includes('wireless')) ? caller.from.name : '', rawDigits, '[]', 'no', '', 'Level 1', caller.from.location || '', callStatus || 'New', new Date().toISOString().split('T')[0], '', new Date().toISOString()]
             );
-            console.log(`📞 [Telephony] NEW CONTACT CREATED: ${contactId} for phone ${rawDigits}`);
         } else {
             contactId = existing[0];
             db.run('UPDATE contacts SET crm_status = ?, city = COALESCE(NULLIF(city, ""), ?), last_call_at = ? WHERE id = ?', [callStatus || 'Answered', caller.from.location || '', new Date().toISOString(), contactId]);
-            console.log(`📞 [Telephony] EXISTING CONTACT UPDATED: ${contactId}`);
         }
 
         // --- 2. LOGGING & AUTO-ASSIGNMENT ---
@@ -440,7 +417,6 @@ async function processTelephonyEvent(body, tenantId = 'simchatalent') {
                     const currentAssigned = existing ? existing[2] : '';
                     if (!currentAssigned) {
                         db.run('UPDATE contacts SET assigned_to = ? WHERE id = ?', [email, contactId]);
-                        console.log(`📞 [Telephony] Auto-assigned contact ${contactId} to ${email}`);
                     }
 
                     // Log the answer specifically
@@ -458,7 +434,6 @@ async function processTelephonyEvent(body, tenantId = 'simchatalent') {
 
                 // Broadcast to SSE clients for this user
                 broadcastToUser(email, { type: 'call-update', data: callData });
-                console.log(`📡 [Telephony] Broadcasting ${callStatus} to ${email}${answeredBy ? ` (Answered by ${answeredBy})` : ''}`);
             }
         });
         saveDatabase();
@@ -485,7 +460,6 @@ async function processTelephonyEvent(body, tenantId = 'simchatalent') {
             const searchDigits = phone.length === 11 && phone.startsWith('1') ? phone.substring(1) : phone;
             getDatabase().run('UPDATE contacts SET answered_by = ? WHERE phone LIKE ?', [answeredBy, `%${searchDigits}`]);
             saveDatabase();
-            console.log(`📞 [Telephony] Call answered by: ${answeredBy}`);
         }
     } else if (eventType === 'Disconnected') {
         const callInfo = ACTIVE_CALLS.get(sessionId);
@@ -539,7 +513,6 @@ app.post('/api/webhooks/ringcentral', async (req, res) => {
     }
 
     try {
-        console.log('📥 RC Webhook Received:', JSON.stringify(req.body, null, 2));
         await processTelephonyEvent(req.body, req.tenantId);
     } catch (e) {
         console.error('Webhook Error:', e);
@@ -1087,7 +1060,6 @@ app.post('/api/users/set-password', (req, res) => {
         );
 
         saveDatabase();
-        console.log(`✅ Password set for user: ${email}`);
         res.json({ message: 'Password set successfully', userId });
     } catch (error) {
         console.error('Error setting password:', error);
@@ -1375,7 +1347,6 @@ const BACKUPS_DIR = path.join(__dirname, 'backups');
 // Ensure backups directory exists
 if (!fs.existsSync(BACKUPS_DIR)) {
     fs.mkdirSync(BACKUPS_DIR, { recursive: true });
-    console.log('📁 Created backups directory');
 }
 
 // Get list of backups
@@ -1425,7 +1396,6 @@ app.post('/api/admin/backups', (req, res) => {
         );
         saveDatabase();
 
-        console.log(`✅ Backup created: ${filename} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
 
         res.json({
             success: true,
@@ -1472,7 +1442,6 @@ app.post('/api/admin/tenants', requireSuperAdmin, async (req, res) => {
         );
         saveDatabase();
 
-        console.log(`🏢 New tenant provisioned: ${name} (${slug})`);
         res.status(201).json({ success: true, tenant: { id, name, slug } });
     } catch (error) {
         console.error('Error provisioning tenant:', error);
@@ -1508,7 +1477,6 @@ app.delete('/api/admin/backups/:filename', (req, res) => {
         }
 
         fs.unlinkSync(backupPath);
-        console.log(`🗑️ Backup deleted: ${filename}`);
 
         res.json({ success: true, message: 'Backup deleted' });
     } catch (error) {
@@ -1564,7 +1532,6 @@ app.put('/api/admin/settings', (req, res) => {
         });
 
         saveDatabase();
-        console.log('⚙️ Admin settings updated:', Object.keys(settings).join(', '));
 
         res.json({ success: true, message: 'Settings updated' });
     } catch (error) {
@@ -1586,7 +1553,6 @@ const runScheduledBackup = () => {
         fs.copyFileSync(DATABASE_PATH, backupPath);
 
         const stats = fs.statSync(backupPath);
-        console.log(`🔄 Scheduled backup created: ${filename} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
 
         // Clean up old backups (keep last 7 days)
         const files = fs.readdirSync(BACKUPS_DIR)
@@ -1596,7 +1562,6 @@ const runScheduledBackup = () => {
 
         files.slice(7).forEach(f => {
             fs.unlinkSync(path.join(BACKUPS_DIR, f.name));
-            console.log(`🧹 Old backup cleaned up: ${f.name}`);
         });
     } catch (error) {
         console.error('❌ Scheduled backup failed:', error.message);
@@ -1605,7 +1570,6 @@ const runScheduledBackup = () => {
 
 // Run backup on startup (after a short delay to let DB initialize)
 setTimeout(() => {
-    console.log('🔄 Running startup backup...');
     runScheduledBackup();
 }, 5000);
 
@@ -1723,7 +1687,6 @@ setInterval(async () => {
             systemHistory.shift();
         }
 
-        console.log(`📊 System metrics recorded: CPU ${dataPoint.cpu}%, RAM ${dataPoint.memory}%`);
     } catch (error) {
         console.error('Failed to record system metrics:', error.message);
     }
@@ -1800,7 +1763,6 @@ app.get('/api/debug/logs', (req, res) => {
 app.post('/api/debug/simulate-call', async (req, res) => {
     try {
         const { phoneNumber, status, direction = 'Inbound', name = 'Simulator Caller', sessionId: providedSessionId, targetExtension } = req.body;
-        console.log(`🧪 [SIMULATOR] Simulating ${direction} Call from ${phoneNumber} (${status}) (Target: ${targetExtension || 'NONE'}) (Session: ${providedSessionId || 'NEW'})`);
 
         const sessionId = providedSessionId || `sim_${Date.now()}`;
         const parties = [
@@ -1877,7 +1839,6 @@ app.post('/api/debug/simulate-call', async (req, res) => {
 app.post('/api/debug/simulate-sms', async (req, res) => {
     try {
         const { from, text } = req.body;
-        console.log(`🧪 [SIMULATOR] Simulating SMS from ${from}: ${text}`);
 
         const db = getDatabase();
         const msgId = `msg_sim_${Date.now()}`;
@@ -1914,13 +1875,11 @@ app.get('/api/telephony/events', (req, res) => {
     const client = { res, email: userEmail };
     sseClients.add(client);
 
-    console.log(`🔌 [SSE] Client connected: ${userEmail}`);
 
     // Send initial ping
     res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
     req.on('close', () => {
-        console.log(`🔌 [SSE] Client disconnected: ${userEmail}`);
         sseClients.delete(client);
     });
 });
@@ -1971,7 +1930,6 @@ app.get('/simchatalent*', (req, res) => {
 // Initial page load logging (for debugging production routing)
 app.use((req, res, next) => {
     if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.includes('.')) {
-        console.log(`[PAGE-REQ] ${req.method} ${req.path}`);
     }
     next();
 });
@@ -1980,7 +1938,6 @@ app.use((req, res, next) => {
 app.post('/api/email/send', async (req, res) => {
     try {
         const { to, subject, html, text } = req.body;
-        console.log(`📧 Email Request: to=${to}, subject=${subject}`);
 
         const apiKey = process.env.RESEND_API_KEY;
 
@@ -2008,7 +1965,6 @@ app.post('/api/email/send', async (req, res) => {
         const data = await response.json();
 
         if (response.ok) {
-            console.log('✅ Email sent via Resend:', data.id);
             res.json({ message: 'Email sent successfully', id: data.id });
         } else {
             console.error('❌ Resend API Error:', data);
@@ -2034,22 +1990,17 @@ app.get('*', (req, res) => {
 });
 
 // Initialize database and start server
-console.log('🏁 [STARTUP] Initializing system...');
 try {
     await initializeDatabase();
-    console.log('✅ [STARTUP] Database initialized');
 } catch (err) {
     console.error('❌ [CRITICAL ERROR] Failed to initialize database:', err);
     // Continue anyway to allow health checks and diagnostics
 }
 
 app.listen(PORT, '0.0.0.0', async () => {
-    console.log(`🚀 Server listening on 0.0.0.0:${PORT}`);
-    console.log(`📊 Database Path: ${DATABASE_PATH}`);
 
     // AUTO-SYNC RINGCENTRAL USERS AT STARTUP (Non-blocking)
     const syncUsers = async () => {
-        console.log('👥 [STARTUP] Syncing RingCentral users...');
         try {
             if (true) { // Always refresh on startup for safety
                 await rcManager.initialize();
@@ -2088,7 +2039,6 @@ app.listen(PORT, '0.0.0.0', async () => {
                             const crmUserId = existing[0].values[0][0];
                             const crmUserName = existing[0].values[0][1];
 
-                            console.log(`🔗 Matching RC User "${user.name}" to CRM User "${crmUserName}" (ID: ${crmUserId})`);
 
                             // Update existing CRM user with RC info
                             db.run(`UPDATE users SET 
@@ -2101,7 +2051,6 @@ app.listen(PORT, '0.0.0.0', async () => {
                             );
                         } else {
                             // 3. If still not found, create as new staff member
-                            console.log(`🆕 Creating new CRM user for RC profile: ${user.name}`);
                             db.run(`INSERT INTO users (id, name, email, ringCentralEmail, role, team, status, extensionNumber, lastSynced) 
                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                                 [user.id, user.name, user.rcEmail, user.rcEmail, user.role, 'Staff', user.status, user.extensionNumber, now]
@@ -2113,7 +2062,6 @@ app.listen(PORT, '0.0.0.0', async () => {
                 });
 
                 saveDatabase();
-                console.log(`✅ [STARTUP] Synced ${users.length} RingCentral users to database`);
             }
         } catch (error) {
             console.error('❌ [STARTUP] Failed to sync RC users:', error.message);

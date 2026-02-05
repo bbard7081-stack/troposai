@@ -19,7 +19,6 @@ const platform = rcsdk.platform();
 
 async function registerWebhook() {
     try {
-        console.log('🔐 Authenticating with RingCentral Production...');
         await platform.login({
             jwt: process.env.VITE_RC_JWT
         });
@@ -27,11 +26,9 @@ async function registerWebhook() {
         const webhookUrl = process.argv[2];
         if (!webhookUrl) {
             console.error('❌ Error: Please provide your public Webhook URL.');
-            console.log('Usage: node registerWebhook.js https://your-crm-domain.com/api/webhooks/ringcentral');
             process.exit(1);
         }
 
-        console.log(`📡 Registering Webhook: ${webhookUrl}`);
 
         const response = await platform.post('/restapi/v1.0/subscription', {
             eventFilters: [
@@ -45,9 +42,6 @@ async function registerWebhook() {
         });
 
         const subscription = await response.json();
-        console.log('✅ Webhook Registered Successfully!');
-        console.log('Subscription ID:', subscription.id);
-        console.log('Status:', subscription.status);
 
     } catch (e) {
         console.error('❌ Registration Failed:', e.message);
@@ -55,7 +49,6 @@ async function registerWebhook() {
             const errJson = await e.response.json();
             console.error('Reason:', JSON.stringify(errJson, null, 2));
             if (errJson.errorCode === 'OAU-251') {
-                console.log('\n💡 TIP: Log into https://developer.ringcentral.com, go to your app "careQ", then "Settings", and check the box for "JWT-Bearer" in the Grant Types section.');
             }
         }
     }

@@ -71,7 +71,6 @@ const RingCentralModule: React.FC<RingCentralModuleProps> = ({
       }
 
       if (callingMode === 'app') {
-        console.log('📡 Triggering RingCentral Widget call...');
         window.postMessage({
           type: 'rc-adapter-new-call',
           phoneNumber: dialString,

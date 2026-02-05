@@ -12,7 +12,6 @@ async function checkUser() {
     const data = fs.readFileSync(dbPath);
     const db = new SQL.Database(data);
     const res = db.exec("SELECT * FROM users WHERE email = 'bbard7081@gmail.com'");
-    console.log(JSON.stringify(res, null, 2));
 }
 
 checkUser().catch(console.error);

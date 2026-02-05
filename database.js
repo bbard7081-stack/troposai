@@ -31,10 +31,8 @@ export async function initializeDatabase() {
   if (fs.existsSync(dbPath)) {
     const buffer = fs.readFileSync(dbPath);
     db = new SQL.Database(buffer);
-    console.log('✅ Loaded existing database');
   } else {
     db = new SQL.Database();
-    console.log('✅ Created new database');
   }
 
   // --- FORCE MIGRATION: Ensure users table has correct columns without dropping data ---
@@ -256,10 +254,8 @@ export async function initializeDatabase() {
     )
   `);
 
-  console.log('✅ Database multi-tenant schema initialized');
 
 
-  console.log('✅ Database schema initialized');
 
   // Seed initial data if database is new
   await seedInitialData();
@@ -283,7 +279,6 @@ async function seedInitialData() {
   const userCount = result[0]?.values[0]?.[0] || 0;
 
   if (userCount === 0) {
-    console.log('📦 Seeding initial data...');
 
     // Insert users
     const users = [
@@ -316,9 +311,7 @@ async function seedInitialData() {
     const contacts = [];
 
     saveDatabase();
-    console.log('✅ Initial data seeded successfully');
   } else {
-    console.log('ℹ️  Database already contains data, skipping seed');
   }
 }
 

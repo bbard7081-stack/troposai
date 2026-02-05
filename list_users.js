@@ -7,7 +7,6 @@ async function listUsers() {
     const db = new SQL.Database(data);
 
     const users = db.exec('SELECT id, name, email, extensionNumber FROM users');
-    console.log(JSON.stringify(users, null, 2));
 }
 
 listUsers().catch(console.error);

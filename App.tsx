@@ -164,7 +164,6 @@ const App: React.FC = () => {
     // SSE for Telephony Events (Replaces Polling)
     const userEmail = currentUser?.email;
     if (isLoggedIn && userEmail) {
-      console.log('🔌 Connecting to Telephony SSE...');
       const eventSource = new EventSource(`/api/telephony/events?email=${encodeURIComponent(userEmail)}`);
 
       eventSource.onmessage = (event) => {
@@ -172,7 +171,6 @@ const App: React.FC = () => {
           const payload = JSON.parse(event.data);
 
           if (payload.type === 'incoming_call' || payload.type === 'call_connected') {
-            console.log(`📞 [Telemetry] ${payload.type}:`, payload);
             setActiveCall({ phoneNumber: payload.phoneNumber, status: payload.type === 'call_connected' ? 'connected' : 'ringing' });
             if (payload.contactId) {
               setActiveRowId(payload.contactId);
@@ -228,20 +226,16 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'rc-adapter-redirect-event') {
-        console.log('--- 🎯 REDIRECT SIGNAL RECEIVED ---');
-        console.log('Payload URL:', event.data.url);
 
         // Find the RingCentral adapter iframe
         const rcIframe = document.querySelector('iframe#rc-widget-adapter-frame') ||
           document.querySelector('iframe[src*="ringcentral"]');
 
         if (rcIframe && (rcIframe as HTMLIFrameElement).contentWindow) {
-          console.log('📡 Forwarding redirect signal to RC adapter iframe...');
           (rcIframe as HTMLIFrameElement).contentWindow!.postMessage(event.data, '*');
         } else {
           console.error('❌ RC Redirect Failure: Could not find the RingCentral adapter iframe to forward the signal!');
         }
-        console.log('-----------------------------------');
       }
     };
 
@@ -261,19 +255,16 @@ const App: React.FC = () => {
     const handleRCMessage = async (e: MessageEvent) => {
       // DEBUG: Log all RC events
       if (e.data && e.data.type && e.data.type.startsWith('rc-')) {
-        console.log('RC_EVENT_DEBUG:', e.data.type, e.data);
       }
 
       // RingCentral Embeddable emits messages. 
       // We listen for 'rc-call-ring-notify' event from the adapter
       if (e.data && e.data.type === 'rc-call-ring-notify') {
         const phoneNumber = e.data.call?.from || 'Unknown';
-        console.log('rc-call-ring-notify', phoneNumber);
 
         try {
           // Pass the current user's email using the ref!
           const userEmail = currentUserRef.current?.email || '';
-          console.log('Assigning new call to:', userEmail);
 
           const contactId = await RingCentralService.handleIncomingCall(phoneNumber, userEmail);
 
@@ -296,14 +287,12 @@ const App: React.FC = () => {
       // Handle Call Answered / Connected
       if (e.data && e.data.type === 'rc-call-start-notify') {
         const phoneNumber = e.data.call?.from || 'Unknown';
-        console.log('rc-call-start-notify', phoneNumber);
         setActiveCall({ phoneNumber, status: 'connected' });
       }
 
       // Listen for Call End / Missed events
       if (e.data && e.data.type === 'rc-call-end-notify') {
         const { phoneNumber, result } = e.data.call;
-        console.log('rc-call-end-notify', phoneNumber, result);
 
         // Handle contact update (legacy logic)
         await RingCentralService.handleCallEnded(phoneNumber, result);
@@ -337,12 +326,6 @@ const App: React.FC = () => {
 
   // Debug environment variables and authentication
   useEffect(() => {
-    console.log('--- SYSTEM DIAGNOSTICS ---');
-    console.log('Current User:', currentUser?.name, 'Role:', currentUser?.role);
-    console.log('RC Client ID:', import.meta.env.VITE_RC_CLIENT_ID ? 'CONNECTED' : 'MISSING');
-    console.log('RC Server:', import.meta.env.VITE_RC_SERVER_URL);
-    console.log('API URL:', import.meta.env.VITE_API_URL);
-    console.log('---------------------------');
   }, [currentUser]);
 
   const visibleData = useMemo(() => {
@@ -371,16 +354,13 @@ const App: React.FC = () => {
 
   // Call handler for GridView
   const handleCall = async (phoneNumber: string, devicePreference: 'app' | 'cell') => {
-    console.log(`☎️ handleCall called: phone=${phoneNumber}, pref=${devicePreference}`);
 
     if (devicePreference === 'app') {
       // Option A: RingCentral Native App
-      console.log('🚀 App Preference: Using Native RC protocol');
       window.location.href = `rc://call?number=${phoneNumber}`;
       setNotifications(prev => [`Dialing ${phoneNumber} via RingCentral App...`, ...prev]);
     } else {
       // Option B: Personal Cell Phone (Backend RingOut)
-      console.log('📱 Cell Preference: Initiating Backend RingOut');
 
       let fromNumber = localStorage.getItem('user_mobile') || '';
       if (!fromNumber) {
@@ -395,7 +375,6 @@ const App: React.FC = () => {
       // DEBUG ALERT
       alert(`Initiating RingOut\nFrom: ${fromNumber}\nTo: ${phoneNumber}\n\nPlease wait for your phone to ring...`);
 
-      console.log(`📤 Sending RingOut request: from=${fromNumber}, to=${phoneNumber}`);
       try {
         const res = await fetch('/api/ringout', {
           method: 'POST',
@@ -408,7 +387,6 @@ const App: React.FC = () => {
         });
 
         const data = await res.json();
-        console.log('📥 RingOut Response:', JSON.stringify(data));
 
         if (res.ok) {
           setNotifications(prev => [`Ringing your cell phone to connect to ${phoneNumber}...`, ...prev]);

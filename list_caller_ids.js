@@ -12,19 +12,15 @@ const rcsdk = new SDK({
 const platform = rcsdk.platform();
 
 async function listCallerIds() {
-    console.log('📡 Fetching Verified Caller IDs...');
     try {
         await platform.login({ jwt: process.env.VITE_RC_JWT });
 
         const resp = await platform.get('/restapi/v1.0/account/~/extension/~/caller-id');
         const data = await resp.json();
 
-        console.log('\n✅ Verified Phone Numbers for this account:');
         data.byFeature.forEach(feat => {
             if (feat.feature === 'RingOut') {
-                console.log('\n--- RingOut Allowed Caller IDs ---');
                 feat.callerIds.forEach(id => {
-                    console.log(`📞 ${id.phoneNumber} (${id.usageType})`);
                 });
             }
         });
