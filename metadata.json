@@ -1,0 +1,8 @@
+{
+  "name": "Tropos",
+  "description": "A Smartsheet-inspired CRM with dynamic columns, row-level security, advanced filtering, and real-time dashboard analytics.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
